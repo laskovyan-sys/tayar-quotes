@@ -607,7 +607,21 @@
     $("#addItem").onclick=()=>{state.items.push(newItem());syncAll();};
     $("#addTable").onclick=()=>{state.extraTables.push(newXTable());syncAll();};
 
-    $("#printBtn").onclick=()=>window.print();
+    // PDF file name = document title at print time
+    const APP_TITLE=document.title;
+    function pdfName(){
+      const c=state.cust;
+      const who=((c.site||"").trim()||(c.name||"").trim());
+      const raw=who?`הצעת מחיר - ${who}`:"הצעת מחיר";
+      return raw.replace(/[\\/:*?"<>|]+/g," ").replace(/\s+/g," ").trim();
+    }
+    function printAsPdf(){
+      document.title=pdfName();
+      const restore=()=>{document.title=APP_TITLE;window.removeEventListener("afterprint",restore);};
+      window.addEventListener("afterprint",restore);
+      window.print();
+    }
+    $("#printBtn").onclick=()=>printAsPdf();
 
     function buildWaUrl(){
       const t=totals(),c=state.cust;
@@ -642,7 +656,7 @@
       };
       window.addEventListener("afterprint",go);
       setTimeout(go,1500);   // fallback if afterprint isn't supported
-      window.print();        // first: save / PDF dialog
+      printAsPdf();          // first: save / PDF dialog
     };
     $("#clearBtn").onclick=()=>{
       if(!confirm("לנקות את כל שדות ההצעה? (הלוגו ופרטי העסק יישמרו)"))return;
